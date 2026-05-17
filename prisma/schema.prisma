@@ -76,6 +76,7 @@ model VehicleDocument {
 model Service {
   id                    String    @id @default(cuid())
   nomorService          String    @unique
+  documentNumber        String?   // Generated document number from penomoran surat (e.g., bkad/SRV/001/03/2026)
   tanggalService        DateTime
   vehicleId             String
   bengkelId             String
@@ -337,4 +338,19 @@ model Signature {
   updatedAt DateTime @updatedAt
 
   @@map("signatures")
+}
+
+model DocumentNumbering {
+  id            String   @id @default(cuid())
+  code          String   @unique    // e.g., "SRV", "LAP", "RWT", "SPP"
+  name          String              // e.g., "Surat Service", "Laporan", "Riwayat Perbaikan"
+  prefix        String   @default("bkad")
+  currentNumber Int      @default(0) // Current sequential number for the year
+  lastYear      Int      @default(0) // Year of last generated number (for yearly reset)
+  digitCount    Int      @default(3) // Number of digits for zero-padding (3 = 001, 4 = 0001)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("document_numberings")
 }

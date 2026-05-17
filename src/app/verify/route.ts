@@ -35,7 +35,7 @@ export async function GET() {
         </svg>
       </div>
       <div style="font-size:14px;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Verifikasi Dokumen</div>
-      <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">No. Dokumen</div>
+      <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">Sistem Penomoran Surat</div>
       <div style="font-size:24px;font-weight:700;margin-bottom:4px;">${appName}</div>
       <div style="font-size:13px;opacity:0.8;">${instansi}</div>
     </div>

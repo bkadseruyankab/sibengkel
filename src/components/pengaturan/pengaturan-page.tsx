@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Settings, Building2, Mail, Users, FileText, Database, Calendar, Save, Plus, Trash2, Edit, Download, Upload, Shield, Clock, User, Image as ImageIcon, Globe, Palette, Stamp, PenLine, MessageSquare, Zap, FileDown, TrendingDown, BarChart3, CheckCircle, Camera, HardDrive, FileArchive, Paperclip, ImagePlus, PenTool, Printer, MapPin } from 'lucide-react'
+import { Settings, Building2, Mail, Users, FileText, Database, Calendar, Save, Plus, Trash2, Edit, Download, Upload, Shield, Clock, User, Image as ImageIcon, Globe, Palette, Stamp, PenLine, MessageSquare, Zap, FileDown, TrendingDown, BarChart3, CheckCircle, Camera, HardDrive, FileArchive, Paperclip, ImagePlus, PenTool, Printer, MapPin, Hash, FileSignature, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth'
@@ -370,6 +370,134 @@ export function PengaturanPage() {
   } | null>(null)
   const storageLoadedRef = useRef(false)
 
+  // Document Numbering states
+  const [docNumDialogOpen, setDocNumDialogOpen] = useState(false)
+  const [editingDocNum, setEditingDocNum] = useState<any>(null)
+  const [docNumForm, setDocNumForm] = useState({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+
+  // Fetch document numberings
+  const { data: docNumberings = [], isLoading: loadingDocNums } = useQuery({
+    queryKey: ['document-numberings'],
+    queryFn: async () => {
+      const res = await fetch('/api/document-numbering')
+      return res.json()
+    },
+  })
+
+  // Create document numbering mutation
+  const createDocNum = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch('/api/document-numbering', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Gagal membuat penomoran surat')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-numberings'] })
+      toast.success('Jenis surat berhasil ditambahkan')
+      setDocNumDialogOpen(false)
+      setEditingDocNum(null)
+      setDocNumForm({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+  })
+
+  // Update document numbering mutation
+  const updateDocNum = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch('/api/document-numbering', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Gagal mengupdate penomoran surat')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-numberings'] })
+      toast.success('Jenis surat berhasil diperbarui')
+      setDocNumDialogOpen(false)
+      setEditingDocNum(null)
+      setDocNumForm({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+  })
+
+  // Delete document numbering mutation
+  const deleteDocNum = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/document-numbering?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Gagal menghapus penomoran surat')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-numberings'] })
+      toast.success('Jenis surat berhasil dihapus')
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+  })
+
+  // Reset document numbering counter
+  const resetDocNum = useMutation({
+    mutationFn: async ({ id, currentNumber }: { id: string; currentNumber: number }) => {
+      const res = await fetch('/api/document-numbering', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, currentNumber }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Gagal reset counter')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-numberings'] })
+      toast.success('Counter berhasil direset')
+    },
+    onError: (err: Error) => {
+      toast.error(err.message)
+    },
+  })
+
+  const handleEditDocNum = (doc: any) => {
+    setEditingDocNum(doc)
+    setDocNumForm({
+      code: doc.code || '',
+      name: doc.name || '',
+      prefix: doc.prefix || 'bkad',
+      digitCount: doc.digitCount || 3,
+      isActive: doc.isActive !== false,
+    })
+    setDocNumDialogOpen(true)
+  }
+
+  const handleDocNumFormSubmit = () => {
+    if (editingDocNum) {
+      updateDocNum.mutate({ id: editingDocNum.id, ...docNumForm })
+    } else {
+      createDocNum.mutate(docNumForm)
+    }
+  }
+
   const handleTestWhatsApp = async () => {
     if (!localSettings.fonnte_api_key) {
       toast.error('API Key Fonnte belum diisi')
@@ -646,6 +774,7 @@ export function PengaturanPage() {
           <TabsTrigger value="compress" className="text-xs rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-teal-500/20 transition-all duration-200"><Zap className="h-3.5 w-3.5 mr-1" /> Kompresi</TabsTrigger>
           <TabsTrigger value="storage" className="text-xs rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-teal-500/20 transition-all duration-200"><HardDrive className="h-3.5 w-3.5 mr-1" /> Penyimpanan</TabsTrigger>
           <TabsTrigger value="backup" className="text-xs rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-teal-500/20 transition-all duration-200">Backup & Restore</TabsTrigger>
+          <TabsTrigger value="penomoran" className="text-xs rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-teal-500/20 transition-all duration-200"><Hash className="h-3.5 w-3.5 mr-1" /> Penomoran Surat</TabsTrigger>
           <TabsTrigger value="tahun" className="text-xs rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-teal-500/20 transition-all duration-200">Pergantian Tahun</TabsTrigger>
         </TabsList>
 
@@ -2529,6 +2658,231 @@ export function PengaturanPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
+
+        {/* Tab: Penomoran Surat */}
+        <TabsContent value="penomoran" className="mt-4">
+          <div className="space-y-6">
+            <Card className="animate-scale-in border border-border/50 shadow-sm rounded-2xl card-hover">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Hash className="h-5 w-5" /> Penomoran Surat</CardTitle>
+                    <CardDescription>Kelola format dan penomoran surat otomatis untuk setiap jenis dokumen</CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setEditingDocNum(null)
+                      setDocNumForm({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+                      setDocNumDialogOpen(true)
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg shadow-teal-500/20"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Tambah Jenis Surat
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Format Info */}
+                <div className="mb-4 p-4 bg-muted/50 rounded-xl border border-border/50">
+                  <div className="flex items-start gap-3">
+                    <FileSignature className="h-5 w-5 text-teal-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Format Nomor Surat</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Format: <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">{'{prefix}'}/{'{kode}'}/{'{nomor}'}/{'{bulan}'}/{'{tahun}'}</code>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Contoh: <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">bkad/SRV/001/03/2026</code>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Nomor akan bertambah otomatis setiap kali dokumen dicetak. Counter reset setiap tahun baru.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {loadingDocNums ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : docNumberings.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Hash className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">Belum ada jenis surat yang dikonfigurasi</p>
+                    <p className="text-xs text-muted-foreground mt-1">Klik "Tambah Jenis Surat" untuk memulai</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border/50 overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12 text-center">No</TableHead>
+                          <TableHead>Kode</TableHead>
+                          <TableHead>Nama Surat</TableHead>
+                          <TableHead>Prefix</TableHead>
+                          <TableHead className="text-center">Digit</TableHead>
+                          <TableHead className="text-center">Counter</TableHead>
+                          <TableHead className="text-center">Tahun</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-center">Preview</TableHead>
+                          <TableHead className="text-right">Aksi</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {docNumberings.map((doc: any, idx: number) => {
+                          const previewNum = String(doc.currentNumber + 1).padStart(doc.digitCount, '0')
+                          const previewMonth = String(new Date().getMonth() + 1).padStart(2, '0')
+                          const previewYear = new Date().getFullYear()
+                          const preview = `${doc.prefix}/${doc.code}/${previewNum}/${previewMonth}/${previewYear}`
+                          return (
+                            <TableRow key={doc.id}>
+                              <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
+                              <TableCell><Badge variant="outline" className="font-mono text-xs">{doc.code}</Badge></TableCell>
+                              <TableCell className="font-medium">{doc.name}</TableCell>
+                              <TableCell className="text-muted-foreground font-mono text-xs">{doc.prefix}</TableCell>
+                              <TableCell className="text-center">{doc.digitCount}</TableCell>
+                              <TableCell className="text-center font-mono font-semibold">{doc.currentNumber}</TableCell>
+                              <TableCell className="text-center text-muted-foreground">{doc.lastYear}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={doc.isActive ? 'default' : 'secondary'} className="text-xs">
+                                  {doc.isActive ? 'Aktif' : 'Nonaktif'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs text-teal-700 dark:text-teal-400">{preview}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Reset Counter" onClick={() => resetDocNum.mutate({ id: doc.id, currentNumber: 0 })}>
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Edit" onClick={() => handleEditDocNum(doc)}>
+                                    <Edit className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" title="Hapus">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Hapus Jenis Surat</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Yakin ingin menghapus jenis surat <strong>{doc.name}</strong> ({doc.code})? Tindakan ini tidak dapat dibatalkan.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteDocNum.mutate(doc.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Document Numbering Dialog */}
+            <Dialog open={docNumDialogOpen} onOpenChange={setDocNumDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Hash className="h-5 w-5" />
+                    {editingDocNum ? 'Edit Jenis Surat' : 'Tambah Jenis Surat'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingDocNum ? 'Ubah konfigurasi jenis surat' : 'Tambahkan jenis surat baru untuk penomoran otomatis'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="doc_code">Kode Surat *</Label>
+                      <Input
+                        id="doc_code"
+                        placeholder="SRV"
+                        value={docNumForm.code}
+                        onChange={(e) => setDocNumForm(s => ({ ...s, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }))}
+                        disabled={!!editingDocNum}
+                        className="font-mono uppercase"
+                      />
+                      <p className="text-xs text-muted-foreground">Kode unik (huruf besar, tanpa spasi)</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="doc_name">Nama Surat *</Label>
+                      <Input
+                        id="doc_name"
+                        placeholder="Surat Service Kendaraan"
+                        value={docNumForm.name}
+                        onChange={(e) => setDocNumForm(s => ({ ...s, name: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="doc_prefix">Prefix</Label>
+                      <Input
+                        id="doc_prefix"
+                        placeholder="bkad"
+                        value={docNumForm.prefix}
+                        onChange={(e) => setDocNumForm(s => ({ ...s, prefix: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">Awalan nomor surat (default: bkad)</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="doc_digits">Jumlah Digit</Label>
+                      <Select value={docNumForm.digitCount.toString()} onValueChange={(v) => setDocNumForm(s => ({ ...s, digitCount: parseInt(v) }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2">2 digit (01-99)</SelectItem>
+                          <SelectItem value="3">3 digit (001-999)</SelectItem>
+                          <SelectItem value="4">4 digit (0001-9999)</SelectItem>
+                          <SelectItem value="5">5 digit (00001-99999)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Status Aktif</Label>
+                      <p className="text-xs text-muted-foreground">Aktifkan penomoran otomatis untuk jenis surat ini</p>
+                    </div>
+                    <Switch
+                      checked={docNumForm.isActive}
+                      onCheckedChange={(checked) => setDocNumForm(s => ({ ...s, isActive: checked }))}
+                    />
+                  </div>
+                  {/* Preview */}
+                  <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
+                    <p className="text-xs text-muted-foreground mb-1">Preview nomor surat berikutnya:</p>
+                    <p className="font-mono text-sm font-semibold text-teal-700 dark:text-teal-400">
+                      {docNumForm.prefix || 'bkad'}/{docNumForm.code || 'XXX'}/{String(1).padStart(docNumForm.digitCount, '0')}/{String(new Date().getMonth() + 1).padStart(2, '0')}/{new Date().getFullYear()}
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDocNumDialogOpen(false)}>Batal</Button>
+                  <Button
+                    onClick={handleDocNumFormSubmit}
+                    disabled={!docNumForm.code || !docNumForm.name || createDocNum.isPending || updateDocNum.isPending}
+                    className="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    {editingDocNum ? 'Simpan Perubahan' : 'Tambah Jenis Surat'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </TabsContent>
 

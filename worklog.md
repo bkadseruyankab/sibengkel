@@ -709,3 +709,39 @@ Stage Summary:
 - QR codes now point to /verify/{id} for service docs, /verify for report docs
 - Verification page shows: document status, service info, vehicle info, bengkel info, items table, history timeline, organization info, signatory details
 - Verification page is public (no authentication required)
+---
+Task ID: 1
+Agent: Main Agent
+Task: Create Document Numbering System (Penomoran Surat) with sequential numbering, settings UI, and verification integration
+
+Work Log:
+- Added `DocumentNumbering` model to Prisma schema with fields: code, name, prefix, currentNumber, lastYear, digitCount, isActive
+- Added `documentNumber` field to Service model to store generated document numbers
+- Pushed schema changes to database and regenerated Prisma client
+- Created API endpoints:
+  - `GET/POST/PUT/DELETE /api/document-numbering` - CRUD for document numbering configurations
+  - `POST /api/document-numbering/generate` - Generate next sequential document number
+- Updated `PUT /api/service/[id]` to accept `documentNumber` field updates
+- Added "Penomoran Surat" tab in Pengaturan page with:
+  - Table showing all document types with code, name, prefix, digit count, counter, year, status, preview
+  - Add/Edit/Delete document types with dialog form
+  - Reset counter functionality
+  - Live preview of next document number
+  - Format info box explaining the format: {prefix}/{code}/{number}/{month}/{year}
+- Integrated document number generation into print functions:
+  - Service page: calls API with code "SRV" when printing timeline, saves result to service record
+  - Laporan page: calls API with code "LAP" when printing reports
+  - Riwayat page: calls API with code "RWT" when printing history
+- Updated verification pages:
+  - `/verify/[id]`: Shows "Nomor Surat" prominently with the generated document number, plus "No. Service" separately
+  - `/verify`: Updated header text from "No. Dokumen" to "Sistem Penomoran Surat"
+  - `/api/service/verify/[id]`: Added documentNumber field to JSON response
+- Seeded default document types: SRV (Surat Service Kendaraan), LAP (Laporan Service Kendaraan), RWT (Riwayat Perbaikan Kendaraan)
+
+Stage Summary:
+- Full document numbering system implemented with format: bkad/{code}/{number}/{month}/{year}
+- Example: bkad/SRV/001/05/2026
+- Counter auto-increments on each print, resets yearly
+- Document number saved to service record and shown on verification page
+- Settings UI allows full CRUD management of document types
+- Default types (SRV, LAP, RWT) pre-seeded for immediate use

@@ -47,6 +47,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Service tidak ditemukan' }, { status: 404 })
     }
 
+    // Handle documentNumber update separately (can be done at any status)
+    if (body.documentNumber !== undefined && Object.keys(body).filter(k => k !== 'documentNumber').length === 0) {
+      const service = await db.service.update({
+        where: { id },
+        data: { documentNumber: body.documentNumber },
+      })
+      return NextResponse.json({ data: service })
+    }
+
     // Allow editing for DIAJUKAN and DITOLAK status
     // DITOLAK: bengkel can fix and resubmit their pengajuan
     if (existingService.statusService !== 'DIAJUKAN' && existingService.statusService !== 'DITOLAK') {

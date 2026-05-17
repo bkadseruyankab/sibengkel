@@ -94,6 +94,9 @@ export async function GET(request: Request, context: RouteContext) {
     const appName = settingsMap.app_name || 'SIService BKAD'
     const instansi = settingsMap.app_instansi || 'Badan Keuangan dan Aset Daerah'
 
+    // Document number display
+    const documentNumber = service.documentNumber || service.nomorService
+
     // Build items table rows
     const itemRows = service.items.map((item, idx) => `
       <tr>
@@ -122,7 +125,7 @@ export async function GET(request: Request, context: RouteContext) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verifikasi Dokumen - ${service.nomorService}</title>
+  <title>Verifikasi Dokumen - ${documentNumber}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
@@ -140,8 +143,8 @@ export async function GET(request: Request, context: RouteContext) {
         </svg>
       </div>
       <div style="font-size:13px;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Verifikasi Dokumen</div>
-      <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">No. Dokumen</div>
-      <div style="font-size:22px;font-weight:700;margin-bottom:4px;">${service.nomorService}</div>
+      <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">Nomor Surat</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:4px;">${documentNumber}</div>
       <div style="font-size:13px;opacity:0.8;">${instansi}</div>
       <!-- Status Badge -->
       <div style="display:inline-block;margin-top:14px;padding:6px 20px;background:rgba(255,255,255,0.2);border-radius:20px;font-weight:600;font-size:13px;backdrop-filter:blur(4px);">
@@ -171,8 +174,12 @@ export async function GET(request: Request, context: RouteContext) {
       </div>
       <div style="display:grid;gap:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
-          <span style="color:#6b7280;font-size:13px;">No. Dokumen</span>
-          <span style="font-weight:700;font-size:13px;color:#1e40af;">${service.nomorService}</span>
+          <span style="color:#6b7280;font-size:13px;">Nomor Surat</span>
+          <span style="font-weight:700;font-size:13px;color:#1e40af;">${documentNumber}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
+          <span style="color:#6b7280;font-size:13px;">No. Service</span>
+          <span style="font-weight:600;font-size:13px;color:#1f2937;">${service.nomorService}</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
           <span style="color:#6b7280;font-size:13px;">Tanggal Service</span>
@@ -335,8 +342,12 @@ export async function GET(request: Request, context: RouteContext) {
       <!-- Document Numbers -->
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;display:grid;gap:8px;text-align:left;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:12px;color:#6b7280;">No. Dokumen</span>
-          <span style="font-weight:700;font-size:12px;color:#1e40af;">${service.nomorService}</span>
+          <span style="font-size:12px;color:#6b7280;">Nomor Surat</span>
+          <span style="font-weight:700;font-size:12px;color:#1e40af;">${documentNumber}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">No. Service</span>
+          <span style="font-weight:600;font-size:12px;color:#1f2937;">${service.nomorService}</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:12px;color:#6b7280;">Tanggal Dibuat</span>

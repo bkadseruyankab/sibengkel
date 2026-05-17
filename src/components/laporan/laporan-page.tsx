@@ -294,13 +294,25 @@ export function LaporanPage() {
     }
   }, [kategoriLaporan, filterVehicle, filterBengkel, filterSkpd, filterJenisKendaraan, filterStatusService, vehicles, workshops])
 
-  // Generate document number
-  const getDocNumber = useCallback(() => {
+  // Generate document number from API
+  const generateDocNumber = useCallback(async (code: string) => {
+    try {
+      const res = await fetch('/api/document-numbering/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        return data.documentNumber as string
+      }
+    } catch {}
+    // Fallback
     const now = new Date()
     const yr = now.getFullYear()
     const mo = String(now.getMonth() + 1).padStart(2, '0')
     const seq = String(Math.floor(Math.random() * 900) + 100)
-    return `${seq}/BKAD/LAP/${mo}/${yr}`
+    return `${seq}/BKAD/${code}/${mo}/${yr}`
   }, [])
 
   // Get period label
@@ -359,7 +371,7 @@ export function LaporanPage() {
   const handlePrintReport = useCallback(async () => {
     const stats = data?.statistics
     const services = filteredServices
-    const docNumber = getDocNumber()
+    const docNumber = await generateDocNumber('LAP')
     const reportTitle = getReportTitle()
     const periodLabel = getPeriodLabel()
     const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -704,7 +716,7 @@ export function LaporanPage() {
     }
     toast.success('Laporan resmi berhasil dicetak')
     setPrintDialogOpen(false)
-  }, [data, filteredServices, getDocNumber, getReportTitle, getPeriodLabel, formatRupiah, printSections, settings, kepalaSignature, qrDataUrl])
+  }, [data, filteredServices, generateDocNumber, getReportTitle, getPeriodLabel, formatRupiah, printSections, settings, kepalaSignature, qrDataUrl])
 
   const handleDownloadPDF = useCallback(() => {
     // Use the same HTML for PDF download
@@ -713,7 +725,7 @@ export function LaporanPage() {
 
   const handlePrintItemsReport = useCallback(async () => {
     const services = filteredServices
-    const docNumber = getDocNumber()
+    const docNumber = await generateDocNumber('LAP')
     const periodLabel = getPeriodLabel()
     const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -837,7 +849,7 @@ export function LaporanPage() {
     }
     toast.success('Laporan item perbaikan berhasil dicetak')
     setPrintItemsDialogOpen(false)
-  }, [filteredServices, getDocNumber, getPeriodLabel, formatRupiah, printItemsSignature, settings, kepalaSignature, qrDataUrl])
+  }, [filteredServices, generateDocNumber, getPeriodLabel, formatRupiah, printItemsSignature, settings, kepalaSignature, qrDataUrl])
 
   if (isLoading) {
     return (
@@ -1746,7 +1758,7 @@ export function LaporanPage() {
               <div style={{ textAlign: 'center', margin: '8px 0' }}>
                 <div style={{ fontSize: '9pt', fontWeight: 'bold', letterSpacing: '0.5px' }}>{getReportTitle()}</div>
                 <div style={{ fontSize: '7pt', color: '#666', marginTop: '2px' }}>
-                  Nomor: {getDocNumber()} | Periode: {getPeriodLabel()}
+                  Nomor: - | Periode: {getPeriodLabel()}
                 </div>
               </div>
 

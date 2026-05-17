@@ -1436,7 +1436,26 @@ export function ServicePage() {
                             const printItems = Array.isArray(detail.items) ? detail.items : []
                             const itemsSubtotal = printItems.reduce((sum: number, item: any) => sum + (item.totalHarga || 0), 0)
                             const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-                            const docNumber = `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/TIMELINE/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+
+                            // Generate document number from API
+                            let docNumber = `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/SRV/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+                            try {
+                              const genRes = await fetch('/api/document-numbering/generate', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: 'SRV' }),
+                              })
+                              if (genRes.ok) {
+                                const genData = await genRes.json()
+                                docNumber = genData.documentNumber
+                                // Save document number to service record
+                                fetch(`/api/service/${detail.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ documentNumber: docNumber }),
+                                }).catch(() => {})
+                              }
+                            } catch {}
 
                             // Build KOP SURAT HTML
                             const kopLogoHtml = settings.app_print_logo || settings.app_logo

@@ -66,6 +66,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       valid: true,
       document: {
         nomorService: service.nomorService,
+        documentNumber: service.documentNumber,
         tanggalService: service.tanggalService,
         jenisService: JENIS_SERVICE_LABELS[service.jenisService] || service.jenisService,
         statusService: STATUS_LABELS[service.statusService] || service.statusService,

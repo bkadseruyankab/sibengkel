@@ -156,7 +156,20 @@ export function RiwayatPage() {
   // Print timeline function
   const handlePrintTimeline = useCallback(async () => {
     const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-    const docNumber = `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/TIMELINE/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+
+    // Generate document number from API
+    let docNumber = `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/RWT/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+    try {
+      const genRes = await fetch('/api/document-numbering/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'RWT' }),
+      })
+      if (genRes.ok) {
+        const genData = await genRes.json()
+        docNumber = genData.documentNumber
+      }
+    } catch {}
 
     // Generate QR code dynamically with verification URL
     const verifyUrl = `${window.location.origin}/verify`
