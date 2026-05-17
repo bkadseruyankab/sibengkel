@@ -140,6 +140,7 @@ export async function GET(request: Request, context: RouteContext) {
         </svg>
       </div>
       <div style="font-size:13px;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Verifikasi Dokumen</div>
+      <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">No. Dokumen</div>
       <div style="font-size:22px;font-weight:700;margin-bottom:4px;">${service.nomorService}</div>
       <div style="font-size:13px;opacity:0.8;">${instansi}</div>
       <!-- Status Badge -->
@@ -170,8 +171,8 @@ export async function GET(request: Request, context: RouteContext) {
       </div>
       <div style="display:grid;gap:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
-          <span style="color:#6b7280;font-size:13px;">No. Service</span>
-          <span style="font-weight:600;font-size:13px;color:#1f2937;">${service.nomorService}</span>
+          <span style="color:#6b7280;font-size:13px;">No. Dokumen</span>
+          <span style="font-weight:700;font-size:13px;color:#1e40af;">${service.nomorService}</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
           <span style="color:#6b7280;font-size:13px;">Tanggal Service</span>
@@ -329,11 +330,29 @@ export async function GET(request: Request, context: RouteContext) {
       </div>
       <div style="font-size:12px;color:#6b7280;line-height:1.6;">
         Dokumen ini diterbitkan oleh <strong>${instansi}</strong><br/>
-        melalui sistem ${appName}.<br/>
-        <span style="color:#9ca3af;">Diverifikasi pada: ${formatDateTime(new Date())}</span>
+        melalui sistem ${appName}.
+      </div>
+      <!-- Document Numbers -->
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;display:grid;gap:8px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">No. Dokumen</span>
+          <span style="font-weight:700;font-size:12px;color:#1e40af;">${service.nomorService}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Tanggal Dibuat</span>
+          <span style="font-weight:600;font-size:12px;color:#1f2937;">${formatDateTime(service.createdAt)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Terakhir Diperbarui</span>
+          <span style="font-weight:600;font-size:12px;color:#1f2937;">${formatDateTime(service.updatedAt)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Tanggal Verifikasi</span>
+          <span style="font-weight:600;font-size:12px;color:#1f2937;">${formatDateTime(new Date())}</span>
+        </div>
       </div>
       ${settingsMap.app_kepala_nama ? `
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f0f0f0;">
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;">
         <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Ditandatangani oleh:</div>
         <div style="font-weight:700;font-size:14px;color:#1f2937;">${settingsMap.app_kepala_nama}</div>
         <div style="font-size:12px;color:#3b82f6;">${settingsMap.app_kepala_jabatan || 'Kepala BKAD'}</div>

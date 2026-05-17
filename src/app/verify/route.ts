@@ -35,6 +35,7 @@ export async function GET() {
         </svg>
       </div>
       <div style="font-size:14px;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Verifikasi Dokumen</div>
+      <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">No. Dokumen</div>
       <div style="font-size:24px;font-weight:700;margin-bottom:4px;">${appName}</div>
       <div style="font-size:13px;opacity:0.8;">${instansi}</div>
     </div>
@@ -70,8 +71,17 @@ export async function GET() {
     ` : ''}
     <div style="background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08);text-align:center;">
       <div style="font-size:12px;color:#6b7280;line-height:1.6;">
-        Untuk verifikasi dokumen service spesifik,<br/>scan QR Code yang tertera pada dokumen service tersebut.<br/><br/>
-        <span style="color:#9ca3af;">Diverifikasi pada: ${new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</span>
+        Untuk verifikasi dokumen service spesifik,<br/>scan QR Code yang tertera pada dokumen service tersebut.
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0;display:grid;gap:6px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Jenis Dokumen</span>
+          <span style="font-weight:600;font-size:12px;color:#1f2937;">Laporan Resmi</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Tanggal Verifikasi</span>
+          <span style="font-weight:600;font-size:12px;color:#1f2937;">${new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</span>
+        </div>
       </div>
     </div>
     <div style="text-align:center;padding:12px;font-size:11px;color:#9ca3af;">
