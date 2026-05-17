@@ -25,16 +25,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if code already exists
-    const existing = await db.documentNumbering.findUnique({ where: { code: code.toUpperCase() } })
+    const existing = await db.documentNumbering.findUnique({ where: { code } })
     if (existing) {
       return NextResponse.json({ error: 'Kode sudah digunakan' }, { status: 400 })
     }
 
     const doc = await db.documentNumbering.create({
       data: {
-        code: code.toUpperCase(),
+        code,
         name,
-        prefix: prefix || 'bkad',
+        prefix: prefix || 'BKAD',
         digitCount: digitCount || 3,
         isActive: isActive !== false,
         currentNumber: 0,
@@ -65,8 +65,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // If code is being changed, check for duplicates
-    if (code && code.toUpperCase() !== existing.code) {
-      const duplicate = await db.documentNumbering.findUnique({ where: { code: code.toUpperCase() } })
+    if (code && code !== existing.code) {
+      const duplicate = await db.documentNumbering.findUnique({ where: { code } })
       if (duplicate) {
         return NextResponse.json({ error: 'Kode sudah digunakan' }, { status: 400 })
       }
@@ -75,7 +75,7 @@ export async function PUT(request: NextRequest) {
     const doc = await db.documentNumbering.update({
       where: { id },
       data: {
-        ...(code ? { code: code.toUpperCase() } : {}),
+        ...(code ? { code } : {}),
         ...(name ? { name } : {}),
         ...(prefix !== undefined ? { prefix } : {}),
         ...(digitCount !== undefined ? { digitCount } : {}),

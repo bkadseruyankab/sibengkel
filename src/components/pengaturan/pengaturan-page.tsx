@@ -373,7 +373,7 @@ export function PengaturanPage() {
   // Document Numbering states
   const [docNumDialogOpen, setDocNumDialogOpen] = useState(false)
   const [editingDocNum, setEditingDocNum] = useState<any>(null)
-  const [docNumForm, setDocNumForm] = useState({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+  const [docNumForm, setDocNumForm] = useState({ code: '', name: '', prefix: 'BKAD', digitCount: 3, isActive: true })
 
   // Fetch document numberings
   const { data: docNumberings = [], isLoading: loadingDocNums } = useQuery({
@@ -403,7 +403,7 @@ export function PengaturanPage() {
       toast.success('Jenis surat berhasil ditambahkan')
       setDocNumDialogOpen(false)
       setEditingDocNum(null)
-      setDocNumForm({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+      setDocNumForm({ code: '', name: '', prefix: 'BKAD', digitCount: 3, isActive: true })
     },
     onError: (err: Error) => {
       toast.error(err.message)
@@ -429,7 +429,7 @@ export function PengaturanPage() {
       toast.success('Jenis surat berhasil diperbarui')
       setDocNumDialogOpen(false)
       setEditingDocNum(null)
-      setDocNumForm({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+      setDocNumForm({ code: '', name: '', prefix: 'BKAD', digitCount: 3, isActive: true })
     },
     onError: (err: Error) => {
       toast.error(err.message)
@@ -483,7 +483,7 @@ export function PengaturanPage() {
     setDocNumForm({
       code: doc.code || '',
       name: doc.name || '',
-      prefix: doc.prefix || 'bkad',
+      prefix: doc.prefix || 'BKAD',
       digitCount: doc.digitCount || 3,
       isActive: doc.isActive !== false,
     })
@@ -813,7 +813,7 @@ export function PengaturanPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Nomor Surat Otomatis</Label>
-                  <p className="text-xs text-muted-foreground">Generate nomor service secara otomatis</p>
+                  <p className="text-xs text-muted-foreground">Generate nomor surat otomatis saat service dibuat menggunakan konfigurasi Penomoran Surat</p>
                 </div>
                 <Switch
                   checked={localSettings.nomor_surat_otomatis === 'true'}
@@ -843,9 +843,9 @@ export function PengaturanPage() {
                   id="format_nomor_surat"
                   value={localSettings.format_nomor_surat || ''}
                   onChange={(e) => setLocalSettings(s => ({ ...s, format_nomor_surat: e.target.value }))}
-                  placeholder="SRV/{tahun}/{nomor}"
+                  placeholder="BKAD/SRV/{nomor}/{bulan}/{tahun}"
                 />
-                <p className="text-xs text-muted-foreground">Gunakan {'{tahun}'} dan {'{nomor}'} sebagai placeholder</p>
+                <p className="text-xs text-muted-foreground">Format lama — sekarang menggunakan Pengaturan Penomoran Surat (tab terpisah). Gunakan {'{tahun}'} dan {'{nomor}'} sebagai placeholder</p>
               </div>
 
               <div className="flex justify-end">
@@ -2674,7 +2674,7 @@ export function PengaturanPage() {
                   <Button
                     onClick={() => {
                       setEditingDocNum(null)
-                      setDocNumForm({ code: '', name: '', prefix: 'bkad', digitCount: 3, isActive: true })
+                      setDocNumForm({ code: '', name: '', prefix: 'BKAD', digitCount: 3, isActive: true })
                       setDocNumDialogOpen(true)
                     }}
                     className="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg shadow-teal-500/20"
@@ -2694,10 +2694,10 @@ export function PengaturanPage() {
                         Format: <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">{'{prefix}'}/{'{kode}'}/{'{nomor}'}/{'{bulan}'}/{'{tahun}'}</code>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Contoh: <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">bkad/SRV/001/03/2026</code>
+                        Contoh: <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">BKAD/SRV/001/03/2026</code> atau <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">bkad/srv/001/03/2026</code>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Nomor akan bertambah otomatis setiap kali dokumen dicetak. Counter reset setiap tahun baru.
+                        Prefix dan kode bebas menggunakan huruf kecil maupun kapital sesuai pengaturan admin. Nomor akan bertambah otomatis setiap kali dokumen dicetak. Counter reset setiap tahun baru.
                       </p>
                     </div>
                   </div>
@@ -2811,11 +2811,11 @@ export function PengaturanPage() {
                         id="doc_code"
                         placeholder="SRV"
                         value={docNumForm.code}
-                        onChange={(e) => setDocNumForm(s => ({ ...s, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }))}
+                        onChange={(e) => setDocNumForm(s => ({ ...s, code: e.target.value.replace(/\s/g, '') }))}
                         disabled={!!editingDocNum}
-                        className="font-mono uppercase"
+                        className="font-mono"
                       />
-                      <p className="text-xs text-muted-foreground">Kode unik (huruf besar, tanpa spasi)</p>
+                      <p className="text-xs text-muted-foreground">Kode unik (bebas huruf kecil/besar, tanpa spasi)</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="doc_name">Nama Surat *</Label>
@@ -2834,10 +2834,10 @@ export function PengaturanPage() {
                         id="doc_prefix"
                         placeholder="bkad"
                         value={docNumForm.prefix}
-                        onChange={(e) => setDocNumForm(s => ({ ...s, prefix: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
+                        onChange={(e) => setDocNumForm(s => ({ ...s, prefix: e.target.value.replace(/\s/g, '') }))}
                         className="font-mono"
                       />
-                      <p className="text-xs text-muted-foreground">Awalan nomor surat (default: bkad)</p>
+                      <p className="text-xs text-muted-foreground">Awalan nomor surat (bebas huruf kecil/besar, tanpa spasi)</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="doc_digits">Jumlah Digit</Label>
@@ -2866,7 +2866,7 @@ export function PengaturanPage() {
                   <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
                     <p className="text-xs text-muted-foreground mb-1">Preview nomor surat berikutnya:</p>
                     <p className="font-mono text-sm font-semibold text-teal-700 dark:text-teal-400">
-                      {docNumForm.prefix || 'bkad'}/{docNumForm.code || 'XXX'}/{String(1).padStart(docNumForm.digitCount, '0')}/{String(new Date().getMonth() + 1).padStart(2, '0')}/{new Date().getFullYear()}
+                      {docNumForm.prefix || 'BKAD'}/{docNumForm.code || 'XXX'}/{String(1).padStart(docNumForm.digitCount, '0')}/{String(new Date().getMonth() + 1).padStart(2, '0')}/{new Date().getFullYear()}
                     </p>
                   </div>
                 </div>

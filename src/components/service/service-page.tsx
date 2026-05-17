@@ -917,8 +917,13 @@ export function ServicePage() {
                           <TableCell className="text-center text-sm text-muted-foreground">
                             {(page - 1) * limit + idx + 1}
                           </TableCell>
-                          <TableCell className="font-mono text-sm font-medium">
-                            {service.nomorService}
+                          <TableCell>
+                            <div className="font-mono text-sm font-medium">
+                              {service.documentNumber || service.nomorService}
+                            </div>
+                            {service.documentNumber && (
+                              <div className="text-xs text-muted-foreground font-mono">{service.nomorService}</div>
+                            )}
                           </TableCell>
                           <TableCell className="text-sm">
                             {formatDate(service.tanggalService)}
@@ -1136,7 +1141,10 @@ export function ServicePage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-bold">Detail Service</h2>
-                      <p className="text-sm text-slate-300 font-mono">{detail.nomorService}</p>
+                      <p className="text-sm text-slate-300 font-mono">{detail.documentNumber || detail.nomorService}</p>
+                      {detail.documentNumber && (
+                        <p className="text-xs text-slate-400 font-mono">{detail.nomorService}</p>
+                      )}
                     </div>
                   </div>
                   <Badge className={cn('text-sm border px-3 py-1', STATUS_COLORS[detail.statusService as StatusService])}>
@@ -1437,25 +1445,27 @@ export function ServicePage() {
                             const itemsSubtotal = printItems.reduce((sum: number, item: any) => sum + (item.totalHarga || 0), 0)
                             const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 
-                            // Generate document number from API
-                            let docNumber = `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/SRV/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
-                            try {
-                              const genRes = await fetch('/api/document-numbering/generate', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ code: 'SRV' }),
-                              })
-                              if (genRes.ok) {
-                                const genData = await genRes.json()
-                                docNumber = genData.documentNumber
-                                // Save document number to service record
-                                fetch(`/api/service/${detail.id}`, {
-                                  method: 'PUT',
+                            // Use existing document number or generate new one from API
+                            let docNumber = detail.documentNumber || `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/SRV/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+                            if (!detail.documentNumber) {
+                              try {
+                                const genRes = await fetch('/api/document-numbering/generate', {
+                                  method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ documentNumber: docNumber }),
-                                }).catch(() => {})
-                              }
-                            } catch {}
+                                  body: JSON.stringify({ code: 'SRV' }),
+                                })
+                                if (genRes.ok) {
+                                  const genData = await genRes.json()
+                                  docNumber = genData.documentNumber
+                                  // Save document number to service record
+                                  fetch(`/api/service/${detail.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ documentNumber: docNumber }),
+                                  }).catch(() => {})
+                                }
+                              } catch {}
+                            }
 
                             // Build KOP SURAT HTML
                             const kopLogoHtml = settings.app_print_logo || settings.app_logo
@@ -1571,9 +1581,10 @@ export function ServicePage() {
   ${kopHtml}
   <div class="doc-info">
     <div class="doc-title">TIMELINE SERVICE KENDARAAN</div>
-    <div class="doc-meta">Nomor: ${docNumber}<br/>Nomor Service: ${detail.nomorService}<br/>Tanggal Cetak: ${printDate}</div>
+    <div class="doc-meta">Nomor Surat: ${docNumber}<br/>Nomor Service: ${detail.nomorService}<br/>Tanggal Cetak: ${printDate}</div>
   </div>
   <div class="info-grid">
+    <span class="info-label">Nomor Surat</span><span style="font-weight:bold;">${docNumber}</span>
     <span class="info-label">Nomor Service</span><span>${detail.nomorService}</span>
     <span class="info-label">Tanggal</span><span>${detail.tanggalService ? new Date(detail.tanggalService).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
     <span class="info-label">Kendaraan</span><span>${detail.vehicle?.nomorPolisi || '-'} - ${detail.vehicle?.merk || ''} ${detail.vehicle?.type || ''}</span>

@@ -324,7 +324,7 @@ export function RiwayatPage() {
   <div class="doc-info">
     <div class="doc-title">TIMELINE RIWAYAT PERBAIKAN KENDARAAN</div>
     <div class="doc-meta">
-      Nomor: ${docNumber}<br/>
+      Nomor Surat: ${docNumber}<br/>
       Filter: ${filterDesc}<br/>
       Tanggal Cetak: ${printDate}
     </div>

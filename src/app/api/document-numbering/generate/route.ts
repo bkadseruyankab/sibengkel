@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 // POST - Generate the next document number for a given type
-// Body: { code: string }  e.g., { code: "SRV" }
+// Body: { code: string }  e.g., { code: "SRV" } or { code: "Srv" }
 // Returns: { documentNumber: string, sequenceNumber: number }
 // Format: {prefix}/{code}/{padded_number}/{month}/{year}
-// Example: bkad/SRV/001/03/2026
+// Example: BKAD/SRV/001/03/2026 or bkad/srv/001/03/2026
+// Note: prefix and code are preserved exactly as configured by admin (case-sensitive)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -15,9 +16,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Kode jenis surat wajib diisi' }, { status: 400 })
     }
 
-    const docType = await db.documentNumbering.findUnique({
-      where: { code: code.toUpperCase() },
+    // Try exact match first, then try case-insensitive lookup
+    let docType = await db.documentNumbering.findUnique({
+      where: { code },
     })
+
+    // If not found, try to find by case-insensitive match
+    if (!docType) {
+      const allDocTypes = await db.documentNumbering.findMany()
+      docType = allDocTypes.find(d => d.code.toLowerCase() === code.toLowerCase()) || null
+    }
 
     if (!docType) {
       return NextResponse.json({ error: 'Jenis surat tidak ditemukan. Tambahkan terlebih dahulu di Pengaturan > Penomoran Surat.' }, { status: 404 })

@@ -146,6 +146,40 @@ export async function POST(request: NextRequest) {
 
     const nomorService = await generateNomorService()
 
+    // Generate document number from penomoran surat system
+    let documentNumber: string | null = null
+    try {
+      const docType = await db.documentNumbering.findFirst({
+        where: { isActive: true, code: { contains: 'SRV' } },
+      })
+      if (docType) {
+        const now = new Date()
+        const currentYear = now.getFullYear()
+        const currentMonth = now.getMonth() + 1
+
+        // Reset counter if year has changed
+        let newNum: number
+        if (docType.lastYear !== currentYear) {
+          newNum = 1
+        } else {
+          newNum = docType.currentNumber + 1
+        }
+
+        // Update the counter
+        await db.documentNumbering.update({
+          where: { id: docType.id },
+          data: { currentNumber: newNum, lastYear: currentYear },
+        })
+
+        const paddedNumber = String(newNum).padStart(docType.digitCount, '0')
+        const paddedMonth = String(currentMonth).padStart(2, '0')
+        documentNumber = `${docType.prefix}/${docType.code}/${paddedNumber}/${paddedMonth}/${currentYear}`
+      }
+    } catch (error) {
+      console.error('Error generating document number:', error)
+      // Non-fatal: service can still be created without documentNumber
+    }
+
     // Calculate total from items
     const totalBiaya = items
       ? items.reduce((sum: number, item: { totalHarga?: number; hargaSatuan?: number; quantity?: number }) => 
@@ -155,6 +189,7 @@ export async function POST(request: NextRequest) {
     const service = await db.service.create({
       data: {
         nomorService,
+        documentNumber,
         tanggalService: new Date(tanggalService),
         vehicleId,
         bengkelId,
@@ -208,10 +243,11 @@ export async function POST(request: NextRequest) {
     })
 
     // Send notification to bengkel users about the new service assignment
+    const displayNumber = documentNumber || nomorService
     await sendNotificationToBengkel(
       bengkelId,
       'Service Baru Ditugaskan',
-      `Service ${nomorService} untuk kendaraan ${service.vehicle?.nomorPolisi || '-'} telah ditugaskan ke bengkel Anda. Silakan proses pengajuan.`,
+      `Service ${displayNumber} untuk kendaraan ${service.vehicle?.nomorPolisi || '-'} telah ditugaskan ke bengkel Anda. Silakan proses pengajuan.`,
       'INFO',
     )
 

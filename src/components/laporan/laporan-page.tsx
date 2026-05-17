@@ -517,7 +517,7 @@ export function LaporanPage() {
   <div class="doc-info">
     <div class="doc-title">${reportTitle}</div>
     <div class="doc-meta">
-      Nomor: ${docNumber}<span>|</span>Periode: ${periodLabel}<br/>
+      Nomor Surat: ${docNumber}<span>|</span>Periode: ${periodLabel}<br/>
       Tanggal Cetak: ${printDate}
     </div>
   </div>
@@ -824,7 +824,7 @@ export function LaporanPage() {
   ${kopHtml}
   <div class="doc-info">
     <div class="doc-title">LAPORAN DETAIL ITEM PERBAIKAN KENDARAAN</div>
-    <div class="doc-meta">Nomor: ${docNumber}<br/>Periode: ${periodLabel}<br/>Tanggal Cetak: ${printDate}</div>
+    <div class="doc-meta">Nomor Surat: ${docNumber}<br/>Periode: ${periodLabel}<br/>Tanggal Cetak: ${printDate}</div>
   </div>
   ${serviceBlocksHtml}
   ${servicesWithItems.length > 0 ? `<div class="grand-total"><span>Grand Total Seluruh Item Perbaikan</span><span>${formatRupiah(grandTotal)}</span></div>` : ''}

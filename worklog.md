@@ -745,3 +745,67 @@ Stage Summary:
 - Document number saved to service record and shown on verification page
 - Settings UI allows full CRUD management of document types
 - Default types (SRV, LAP, RWT) pre-seeded for immediate use
+
+---
+Task ID: 10
+Agent: Main Agent
+Task: Update penomoran surat system - allow free case prefix/code, auto-generate documentNumber on service creation, integrate into print docs and verification
+
+Work Log:
+1. **Pengaturan Page - Free Case Prefix/Code**
+   - Removed `.toLowerCase().replace(/[^a-z0-9]/g, '')` restriction from prefix input - now allows any case (BKAD, bkad, Bkad, etc.)
+   - Removed `.toUpperCase().replace(/[^A-Z0-9]/g, '')` restriction from code input - now allows any case (SRV, Srv, srv, etc.)
+   - Changed default prefix from 'bkad' to 'BKAD' in all form state initializations
+   - Updated placeholder and helper text to indicate free case support
+   - Updated format info section with dual example (BKAD/SRV and bkad/srv)
+   - Updated "Nomor Surat Otomatis" description to reference Penomoran Surat tab
+   - Updated format_nomor_surat placeholder and description to reference new system
+
+2. **Document Numbering API - Free Case Support**
+   - Removed `.toUpperCase()` from code field in POST (create) - now stores exactly as provided
+   - Removed `.toUpperCase()` from code field in PUT (update) - now stores exactly as provided
+   - Changed default prefix from 'bkad' to 'BKAD' in create endpoint
+   - Duplicate check now uses exact case match (not case-insensitive)
+
+3. **Generate API - Case-Preserving**
+   - Updated to try exact match first, then case-insensitive fallback lookup
+   - Generated document number uses prefix/code exactly as stored in database
+   - Comments updated to reflect case-preserving behavior
+
+4. **Service Creation - Auto DocumentNumber**
+   - Added document number generation in POST /api/service
+   - Looks up SRV document numbering configuration
+   - Auto-increments counter and generates formatted number
+   - Stores documentNumber in the service record
+   - Non-fatal: service can still be created if document numbering fails
+   - Notification message uses documentNumber when available
+
+5. **Service Print - Document Number Display**
+   - Print now uses existing documentNumber from service record (not generating new one each time)
+   - Only generates new number if service doesn't already have one
+   - Updated doc-meta to show "Nomor Surat:" label
+   - Added "Nomor Surat" row in info-grid (bold, first row)
+   - Service table shows documentNumber with nomorService as secondary line
+
+6. **Laporan Print - Document Number Display**
+   - Updated doc-meta to show "Nomor Surat:" instead of "Nomor:"
+   - Applied to both handlePrintReport and handlePrintItemsReport
+
+7. **Riwayat Print - Document Number Display**
+   - Updated doc-meta to show "Nomor Surat:" instead of "Nomor:"
+
+8. **Service Detail View**
+   - Header shows documentNumber as primary number, nomorService as secondary
+
+9. **Data Migration**
+   - Updated existing SRV, LAP, RWT document numbering entries from prefix 'bkad' to 'BKAD'
+   - Reset SRV counter to 0 for fresh start
+
+Stage Summary:
+- Prefix and code fields now accept any case (lowercase, uppercase, mixed) as configured by admin
+- Document numbers are generated using prefix/code exactly as stored (no forced case conversion)
+- New services automatically get a documentNumber from the SRV penomoran surat configuration
+- Print documents display "Nomor Surat" prominently with the generated document number
+- Verification pages already show documentNumber (existing feature)
+- Files modified: pengaturan-page.tsx, document-numbering/route.ts, document-numbering/generate/route.ts, service/route.ts, service-page.tsx, laporan-page.tsx, riwayat-page.tsx
+- Lint: 0 errors, 2 pre-existing warnings
