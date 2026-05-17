@@ -141,6 +141,7 @@ export function RiwayatPage() {
   }, [])
 
   // Generate QR code data URL for print documents
+  // (will be regenerated at print time with actual document verification URL)
   useEffect(() => {
     generateQRDataURL(window.location.origin, 150).then(setQrDataUrl).catch(() => {})
   }, [])
@@ -153,9 +154,17 @@ export function RiwayatPage() {
   const bengkels = bengkelData?.data || []
 
   // Print timeline function
-  const handlePrintTimeline = useCallback(() => {
+  const handlePrintTimeline = useCallback(async () => {
     const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
     const docNumber = `${String(Math.floor(Math.random() * 900) + 100)}/BKAD/TIMELINE/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`
+
+    // Generate QR code dynamically with verification URL
+    const verifyUrl = `${window.location.origin}/verify`
+    let printQrDataUrl = qrDataUrl
+    try {
+      const generated = await generateQRDataURL(verifyUrl, 150)
+      if (generated) printQrDataUrl = generated
+    } catch {}
 
     // Build filter description
     let filterDesc = 'Semua Data'
@@ -410,8 +419,8 @@ export function RiwayatPage() {
   <!-- SIGNATURE -->
   <div class="signature-section">
     <div class="sig-qr">
-      ${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR Code Verifikasi" style="width:120px;height:120px;" />` : `<div style="width:120px;height:120px;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;">QR Code</div>`}
-      <div class="sig-qr-label">Scan untuk verifikasi</div>
+      ${printQrDataUrl ? `<img src="${printQrDataUrl}" alt="QR Code Verifikasi" style="width:120px;height:120px;" />` : `<div style="width:120px;height:120px;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;">QR Code</div>`}
+      <div class="sig-qr-label">Scan untuk verifikasi dokumen</div>
     </div>
     <div class="sig-block">
       <div class="sig-date">${settings.app_kabupaten_kota || settings.app_tempat_ttd || 'Kabupaten/Kota'}, ${printDate}</div>

@@ -685,3 +685,27 @@ Stage Summary:
 - Jabatan Kepala position moved below Name in all cetak documents
 - All 3 print-enabled files updated consistently
 - Lint: 0 errors, 2 pre-existing warnings
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Create QR Code Document Verification Page
+
+Work Log:
+- Analyzed uploaded reference image showing Indonesian government document verification page design
+- Created API endpoint /api/service/verify/[id] for public verification data (no auth required)
+- Created verification page /verify/[id] with professional design (blue header, white content, label-value pairs)
+- Created landing page /verify for report QR codes (laporan/riwayat)
+- Updated QR codes in service-page.tsx to point to /verify/{serviceId} instead of /api/service/{id}
+- Updated QR codes in laporan-page.tsx to generate dynamically at print time with /verify URL
+- Updated QR codes in riwayat-page.tsx to generate dynamically at print time with /verify URL
+- Fixed duplicate qrDataUrl state declaration in laporan-page.tsx
+- Changed page.tsx to route.ts for verify routes (proper Next.js App Router pattern)
+- Verified all pages return 200 status
+
+Stage Summary:
+- New files: /src/app/verify/route.ts, /src/app/verify/[id]/route.ts, /src/app/api/service/verify/[id]/route.ts
+- Modified files: service-page.tsx, laporan-page.tsx, riwayat-page.tsx
+- QR codes now point to /verify/{id} for service docs, /verify for report docs
+- Verification page shows: document status, service info, vehicle info, bengkel info, items table, history timeline, organization info, signatory details
+- Verification page is public (no authentication required)

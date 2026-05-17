@@ -138,7 +138,6 @@ export function LaporanPage() {
 
   // Fetch Kepala BKAD signature for print documents
   const [kepalaSignature, setKepalaSignature] = useState<string | null>(null)
-  const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const kepalaSigFetched = useRef(false)
   useEffect(() => {
     if (kepalaSigFetched.current) return
@@ -166,7 +165,10 @@ export function LaporanPage() {
   }, [])
 
   // Generate QR code data URL for print documents
+  // (will be regenerated at print time with actual document verification URL)
+  const [qrDataUrl, setQrDataUrl] = useState<string>('')
   useEffect(() => {
+    // Default QR pointing to app origin (placeholder until print generates specific one)
     generateQRDataURL(window.location.origin, 150).then(setQrDataUrl).catch(() => {})
   }, [])
 
@@ -354,13 +356,21 @@ export function LaporanPage() {
     }
   }
 
-  const handlePrintReport = useCallback(() => {
+  const handlePrintReport = useCallback(async () => {
     const stats = data?.statistics
     const services = filteredServices
     const docNumber = getDocNumber()
     const reportTitle = getReportTitle()
     const periodLabel = getPeriodLabel()
     const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+
+    // Generate QR code dynamically with verification URL
+    const verifyUrl = `${window.location.origin}/verify`
+    let printQrDataUrl = qrDataUrl
+    try {
+      const generated = await generateQRDataURL(verifyUrl, 150)
+      if (generated) printQrDataUrl = generated
+    } catch {}
 
     const totalBiayaService = services.reduce((sum: number, s: any) => sum + (s.totalBiaya || 0), 0)
     const selesaiCount = services.filter((s: any) => s.statusService === 'SELESAI').length
@@ -654,7 +664,7 @@ export function LaporanPage() {
   <!-- SIGNATURE -->
   <div class="signature-section">
     <div class="sig-qr">
-      ${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR Code Verifikasi" style="width:120px;height:120px;" />` : `<div style="width:120px;height:120px;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;">QR Code</div>`}
+      ${printQrDataUrl ? `<img src="${printQrDataUrl}" alt="QR Code Verifikasi" style="width:120px;height:120px;" />` : `<div style="width:120px;height:120px;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;">QR Code</div>`}
       <div class="sig-qr-label">Scan untuk verifikasi dokumen</div>
     </div>
     <div class="sig-block">
@@ -701,11 +711,19 @@ export function LaporanPage() {
     handlePrintReport()
   }, [handlePrintReport])
 
-  const handlePrintItemsReport = useCallback(() => {
+  const handlePrintItemsReport = useCallback(async () => {
     const services = filteredServices
     const docNumber = getDocNumber()
     const periodLabel = getPeriodLabel()
     const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+
+    // Generate QR code dynamically with verification URL
+    const verifyUrl = `${window.location.origin}/verify`
+    let printQrDataUrl = qrDataUrl
+    try {
+      const generated = await generateQRDataURL(verifyUrl, 150)
+      if (generated) printQrDataUrl = generated
+    } catch {}
 
     // Filter services that have items
     const servicesWithItems = services.filter((s: any) => Array.isArray(s.items) && s.items.length > 0)
@@ -736,7 +754,7 @@ export function LaporanPage() {
 
     // Build signature HTML
     const sigHtml = printItemsSignature
-      ? `<div class="signature-section"><div class="sig-qr">${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR Code Verifikasi" style="width:120px;height:120px;" />` : `<div style="width:120px;height:120px;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;">QR Code</div>`}<div style="font-size:7.5pt;color:#555;margin-top:4px;line-height:1.3;">Scan untuk verifikasi dokumen</div></div><div class="sig-block"><div class="sig-date">${settings.app_kabupaten_kota || settings.app_tempat_ttd || 'Kabupaten/Kota'}, ${printDate}</div><div class="sig-jabatan">${settings.app_kepala_jabatan || 'Kepala BKAD'}</div>${settings.app_tte_image ? `<div style="height:70px;display:flex;align-items:flex-end;justify-content:center;"><img src="${window.location.origin}${settings.app_tte_image}" alt="Tanda Tangan Elektronik" style="max-height:70px;max-width:200px;object-fit:contain;" /></div>` : kepalaSignature ? `<div style="height:60px;display:flex;align-items:flex-end;justify-content:center;"><img src="${kepalaSignature}" alt="Tanda Tangan" style="max-height:55px;max-width:180px;object-fit:contain;" /></div>` : `<div style="height:60px;"></div>`}<div class="sig-name">${settings.app_kepala_nama || '________________________'}</div><div class="sig-nip">NIP. ${settings.app_kepala_nip || '________________________'}</div>${settings.app_tte_image ? `<div class="sig-tte-label">Tanda Tangan Elektronik</div>` : ''}</div></div>`
+      ? `<div class="signature-section"><div class="sig-qr">${printQrDataUrl ? `<img src="${printQrDataUrl}" alt="QR Code Verifikasi" style="width:120px;height:120px;" />` : `<div style="width:120px;height:120px;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;">QR Code</div>`}<div style="font-size:7.5pt;color:#555;margin-top:4px;line-height:1.3;">Scan untuk verifikasi dokumen</div></div><div class="sig-block"><div class="sig-date">${settings.app_kabupaten_kota || settings.app_tempat_ttd || 'Kabupaten/Kota'}, ${printDate}</div><div class="sig-jabatan">${settings.app_kepala_jabatan || 'Kepala BKAD'}</div>${settings.app_tte_image ? `<div style="height:70px;display:flex;align-items:flex-end;justify-content:center;"><img src="${window.location.origin}${settings.app_tte_image}" alt="Tanda Tangan Elektronik" style="max-height:70px;max-width:200px;object-fit:contain;" /></div>` : kepalaSignature ? `<div style="height:60px;display:flex;align-items:flex-end;justify-content:center;"><img src="${kepalaSignature}" alt="Tanda Tangan" style="max-height:55px;max-width:180px;object-fit:contain;" /></div>` : `<div style="height:60px;"></div>`}<div class="sig-name">${settings.app_kepala_nama || '________________________'}</div><div class="sig-nip">NIP. ${settings.app_kepala_nip || '________________________'}</div>${settings.app_tte_image ? `<div class="sig-tte-label">Tanda Tangan Elektronik</div>` : ''}</div></div>`
       : ''
 
     const html = `<!DOCTYPE html>
